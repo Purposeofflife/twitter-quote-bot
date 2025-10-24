@@ -37,9 +37,17 @@ def get_background():
     topics = ["nature", "sky", "mountains", "forest", "sunset", "inspiration"]
     topic = random.choice(topics)
     url = f"https://source.unsplash.com/800x400/?{topic}"
-    response = requests.get(url)
-    img = Image.open(BytesIO(response.content)).convert("RGB")
-    return img
+
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # check for bad response
+        img = Image.open(BytesIO(response.content)).convert("RGB")
+        return img
+    except Exception as e:
+        print(f"⚠️ Could not load background image: {e}")
+        # Fallback: create a simple solid background
+        img = Image.new("RGB", (800, 400), color=(40, 40, 40))
+        return img
 
 # --- Step 4: Create the final image with the quote ---
 def create_quote_image(quote):
