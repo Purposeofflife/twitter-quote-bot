@@ -1,27 +1,35 @@
 import os
-import random
 import requests
 import tweepy
+from dotenv import load_dotenv
 
-# connect to Twitter v2
-client = tweepy.Client(
-    consumer_key=os.getenv("TWITTER_API_KEY"),
-    consumer_secret=os.getenv("TWITTER_API_SECRET"),
-    access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
-    access_token_secret=os.getenv("TWITTER_ACCESS_SECRET")
-)
+# Load environment variables (GitHub Secrets)
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY")
+API_KEY_SECRET = os.getenv("API_KEY_SECRET")
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
+
+# Authenticate with Twitter
+auth = tweepy.OAuth1UserHandler(API_KEY, API_KEY_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+api = tweepy.API(auth)
 
 def get_quote():
-    r = requests.get("https://api.quotable.io/random", verify=False)
-    data = r.json()
-    return f"“{data['content']}”\n— {data['author']}"
+    try:
+        response = requests.get("https://api.quotable.io/random", timeout=10)
+        data = response.json()
+        return f"{data['content']} — {data['author']}"
+    except Exception as e:
+        return "Keep going, the best is yet to come! — Unknown"
 
-def post_text_quote():
+def post_quote():
     quote = get_quote()
-    hashtags = "#Motivation #Inspiration #QuoteOfTheDay"
-    tweet = f"{quote}\n\n{hashtags}"
-    client.create_tweet(text=tweet)
-    print("✅ Posted text quote successfully!")
+    try:
+        api.update_status(quote)
+        print("Tweet posted successfully!")
+    except Exception as e:
+        print("Error posting tweet:", e)
 
 if __name__ == "__main__":
-    post_text_quote()
+    post_quote()
