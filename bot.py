@@ -12,7 +12,7 @@ client = tweepy.Client(
 )
 
 def get_quote():
-    r = requests.get("https://api.quotable.io/random")
+    r = requests.get("https://api.quotable.io/random", verify=False)
     data = r.json()
     return f"“{data['content']}”\n— {data['author']}"
 
