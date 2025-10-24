@@ -51,34 +51,37 @@ def get_background():
 
 # --- Step 4: Create the final image with the quote ---
 def create_quote_image(quote):
-    img = get_background().filter(ImageFilter.GaussianBlur(2))  # blur the background
+    img = get_background().filter(ImageFilter.GaussianBlur(2))
     draw = ImageDraw.Draw(img)
 
     # Load a simple, readable font
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
     font = ImageFont.truetype(font_path, 28)
 
-    # Wrap the text neatly
+    # Wrap text neatly
     wrapped_text = textwrap.fill(quote, width=40)
-    text_w, text_h = draw.textsize(wrapped_text, font=font)
+
+    # ✅ FIXED text size calculation
+    bbox = draw.textbbox((0, 0), wrapped_text, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+
     x = (img.width - text_w) / 2
     y = (img.height - text_h) / 2
 
-    # Add a dark transparent overlay so the text is easier to read
+    # Add dark overlay for readability
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 120))
     img = Image.alpha_composite(img.convert("RGBA"), overlay)
 
-    # Draw the quote text (with a small shadow for contrast)
+    # Draw text with shadow
     shadow_color = "black"
     text_color = "white"
     for offset in [(2, 2), (-2, -2), (2, -2), (-2, 2)]:
         draw.text((x + offset[0], y + offset[1]), wrapped_text, font=font, fill=shadow_color)
     draw.text((x, y), wrapped_text, font=font, fill=text_color)
 
-    # Save the final image
     img.convert("RGB").save("quote.jpg")
 
-# --- Step 5: Post the image and hashtags to Twitter ---
 def post_quote():
     quote = get_quote()
     create_quote_image(quote)
